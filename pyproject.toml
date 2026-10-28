@@ -1,0 +1,44 @@
+[project]
+name = "brief-digest"
+version = "0.0.0"
+description = "Local tool that converts court filings (PDF) to text and drafts structured summaries with a local LLM."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "pre-commit>=3.7",
+    "reportlab>=4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "T20", "PTH", "SIM", "RUF", "TID"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"requests".msg = "No network clients (rule 5). Only the Ollama module may talk to loopback."
+"httpx".msg = "No network clients (rule 5). Only the Ollama module may talk to loopback."
+"aiohttp".msg = "No network clients (rule 5)."
+"urllib.request".msg = "No network clients (rule 5)."
+"http.client".msg = "No network clients (rule 5)."
+"socket".msg = "No raw sockets (rule 5)."
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config", "--import-mode=importlib"]
+xfail_strict = true

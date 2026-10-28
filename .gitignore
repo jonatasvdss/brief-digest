@@ -1,0 +1,77 @@
+# --- Documents and derived data (hard rules 1-2) ---
+*.pdf
+*.PDF
+*.doc
+*.docx
+*.odt
+*.rtf
+*.eml
+*.msg
+*.zip
+full.md
+summary.md
+# OCR intermediates and screenshots
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+*.bmp
+*.heic
+
+# --- Runtime state and logs ---
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.log
+logs/
+inbox/
+outbox/
+data/
+tests/fixtures/generated/
+
+# --- Secrets ---
+.env
+.env.*
+
+# --- Local working notes ---
+NOTES.md
+
+# --- Claude Code ---
+.claude/*
+!.claude/settings.json
+.claude/settings.local.json
+CLAUDE.local.md
+
+# --- Browser profiles / automation artifacts (should never exist here) ---
+*-profile/
+user-data-dir/
+.playwright/
+playwright/.auth/
+
+# --- Python / tooling ---
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# --- OS / editors ---
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+.vscode/
+.idea/
+*.swp

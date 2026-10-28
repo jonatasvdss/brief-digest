@@ -1,0 +1,36 @@
+default_install_hook_types: [pre-commit]
+default_stages: [pre-commit]
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: no-pdfs-outside-fixtures
+        name: Block PDFs outside tests/fixtures
+        language: fail
+        entry: "PDFs may only be committed under tests/fixtures/"
+        files: '(?i)\.pdf$'
+        exclude: '^tests/fixtures/'
+
+      - id: no-sensitive-files
+        name: Block env, local settings, pipeline outputs, images, databases, logs
+        language: fail
+        entry: "This file type must not be committed (see CLAUDE.md hard rules)"
+        files: '(?i)((^|/)\.env(\..*)?$|(^|/)settings\.local\.json$|(^|/)(full|summary)\.md$|\.(png|jpe?g|tiff?|bmp|heic|docx?|sqlite3?|db|log)$)'
+
+      - id: no-absolute-local-paths
+        name: Block absolute local user paths
+        language: pygrep
+        entry: '(?i)([A-Z]:\\+Users\\+|/Users/[^/\s]+/|/home/[^/\s]+/)'
+        types: [text]
+        exclude: '^\.pre-commit-config\.yaml$'
+
+      - id: no-brazilian-identifiers
+        name: Block CNJ case numbers, CPF, CNPJ patterns
+        language: pygrep
+        entry: '\b\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}\b|\b\d{3}\.\d{3}\.\d{3}-\d{2}\b|\b\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b'
+        types: [text]

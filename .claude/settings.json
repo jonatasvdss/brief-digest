@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "disableBypassPermissionsMode": "disable",
+    "allow": [],
+    "ask": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git push)",
+      "Bash(gh repo *)"
+    ],
+    "deny": [
+      "PowerShell",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f*)",
+      "Bash(git push *+*)",
+      "Bash(git reset --hard*)",
+      "Bash(git reset * --hard*)",
+      "Bash(git * --no-verify*)",
+      "Bash(git commit -n*)",
+      "Bash(git commit * -n*)",
+      "Bash(git -c core.hooksPath*)",
+      "Bash(git config *core.hooksPath*)",
+      "Bash(SKIP=*)",
+      "Bash(pre-commit uninstall*)",
+      "Edit(./.git/**)",
+      "Write(./.git/**)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(**/*.pdf)"
+    ]
+  }
+}
