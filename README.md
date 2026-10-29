@@ -10,6 +10,7 @@ Status: early development (repository skeleton).
 ```sh
 uv sync
 uv run pre-commit install
+uv run python scripts/fetch_tessdata.py   # one-time: Portuguese OCR data, pinned + checksummed
 uv run pytest
 uv run ruff check .
 ```
