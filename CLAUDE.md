@@ -62,6 +62,10 @@ Pipeline, each stage idempotent and communicating through files plus a SQLite st
   fixtures); otherwise OCR that page. If OCR fails, mark the page unreadable, record
   the error type without document text, and mark the document incomplete rather than
   producing a normal summary. Strip repeated headers/footers by rule.
+  OCR uses the Tesseract engine built into PyMuPDF; only the Portuguese language data
+  is needed, fetched by `scripts/fetch_tessdata.py` (pinned commit + SHA-256) as an
+  explicit setup step. The tessdata location is always configured explicitly (config
+  or `TESSDATA_PREFIX`); never use PyMuPDF's auto-discovery, which runs shell commands.
 - **Summarization:** local LLM via Ollama on `localhost`. Map-reduce over chunks.
   Output sections are defined by a template, never hardcoded in Python (see
   "Summary template" below).
@@ -134,6 +138,8 @@ scheduled with `launchd`, one-command install script.
 ## Version control and permissions
 
 - Repo starts private; publish only after a full history review.
+- License: PyMuPDF and pymupdf4llm are AGPL-3.0, so the project will be published
+  under AGPL-3.0 (decided). Add the LICENSE file at publication time.
 - Before creating or importing project files, verify that the repository is private
   and that `.gitignore`, `.claude/settings.json`, and the gitleaks pre-commit hook are
   configured. If any check fails, stop before staging or committing anything.
@@ -170,7 +176,7 @@ scheduled with `launchd`, one-command install script.
 6. Orchestration (SQLite state, watcher, `launchd`), packaging, install script
 7. Hardening, docs, handover
 
-Current phase: 2
+Current phase: 3
 
 ## How to work with the developer
 
