@@ -37,6 +37,10 @@ PageMethod = Literal["native", "ocr", "unreadable"]
 @dataclass(frozen=True)
 class ExtractConfig:
     min_native_chars: int = 40
+    # OCR a page whose images cover at least this share of it, even when it has
+    # native text: e-filing systems stamp native signature lines onto scans.
+    # None disables the rule.
+    ocr_image_coverage: float | None = 0.5
     ocr_language: str = "por"
     ocr_dpi: int = 300
     tessdata: Path | None = None  # None: TESSDATA_PREFIX; never auto-discovered
@@ -145,13 +149,27 @@ def _ocr(page: pymupdf.Page, config: ExtractConfig) -> str:
     return page.get_text(textpage=textpage)
 
 
+def image_coverage(page: pymupdf.Page) -> float:
+    """Share of the page area covered by images (overlaps counted twice, capped at 1)."""
+    page_area = page.rect.get_area()
+    if not page_area:
+        return 0.0
+    covered = sum(
+        pymupdf.Rect(info["bbox"]).intersect(page.rect).get_area() for info in page.get_image_info()
+    )
+    return min(1.0, covered / page_area)
+
+
+def _use_native(page: pymupdf.Page, config: ExtractConfig) -> bool:
+    if non_space_chars(page.get_text()) < config.min_native_chars:
+        return False
+    limit = config.ocr_image_coverage
+    return limit is None or image_coverage(page) < limit
+
+
 def _read_pages(pdf_path: Path, config: ExtractConfig) -> tuple[list[PageResult], list[str]]:
     with pymupdf.open(pdf_path) as doc:
-        native = [
-            i
-            for i, page in enumerate(doc)
-            if non_space_chars(page.get_text()) >= config.min_native_chars
-        ]
+        native = [i for i, page in enumerate(doc) if _use_native(page, config)]
         texts: dict[int, str] = {}
         if native:
             chunks = pymupdf4llm.to_markdown(

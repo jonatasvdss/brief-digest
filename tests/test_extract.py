@@ -80,6 +80,16 @@ def test_page_method_follows_native_text_threshold(extracted: dict[str, Extracte
     assert methods(extracted["appeal_mixed_scan"]) == ["native", "ocr", "native"]
     assert methods(extracted["appeal_scanned"]) == ["ocr"] * 3
     assert methods(extracted["appeal_sparse_page"]) == ["native", "ocr", "native"]
+    # Scans carrying a long native signature stamp; the small logo stays native.
+    assert methods(extracted["appeal_signed_scan"]) == ["native", "ocr", "ocr"]
+
+
+def test_image_coverage_rule_is_what_catches_stamped_scans(
+    synthetic_pdfs: dict[str, Path], config: ExtractConfig, tmp_path: Path
+) -> None:
+    no_rule = ExtractConfig(tessdata=config.tessdata, ocr_image_coverage=None)
+    item = run(synthetic_pdfs["appeal_signed_scan"], tmp_path, no_rule)
+    assert methods(item) == ["native"] * 3
 
 
 def test_threshold_is_configurable(
@@ -90,7 +100,9 @@ def test_threshold_is_configurable(
     assert methods(item) == ["ocr"] * 3
 
 
-@pytest.mark.parametrize("name", ["appeal_native", "appeal_mixed_scan", "appeal_scanned"])
+@pytest.mark.parametrize(
+    "name", ["appeal_native", "appeal_mixed_scan", "appeal_scanned", "appeal_signed_scan"]
+)
 def test_citations_land_on_their_page(
     name: str, extracted: dict[str, Extracted], synthetic_docs: dict[str, SyntheticDoc]
 ) -> None:
@@ -101,7 +113,9 @@ def test_citations_land_on_their_page(
         assert all(squash(citation) not in squash(pages[n]) for n in others)
 
 
-@pytest.mark.parametrize("name", ["appeal_native", "appeal_mixed_scan", "appeal_scanned"])
+@pytest.mark.parametrize(
+    "name", ["appeal_native", "appeal_mixed_scan", "appeal_scanned", "appeal_signed_scan"]
+)
 def test_repeated_header_and_footer_are_stripped(
     name: str, extracted: dict[str, Extracted]
 ) -> None:

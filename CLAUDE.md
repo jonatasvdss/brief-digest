@@ -59,7 +59,9 @@ Pipeline, each stage idempotent and communicating through files plus a SQLite st
 - **Extraction:** deterministic, no LLM. PyMuPDF (`pymupdf4llm` for light Markdown).
   Insert `<!-- page N -->` markers. Use native text when a page yields at least 40
   non-whitespace characters (configurable; validate the threshold with synthetic
-  fixtures); otherwise OCR that page. If OCR fails, mark the page unreadable, record
+  fixtures); otherwise OCR that page. Also OCR a page whose images cover at least
+  50% of it (configurable), because e-filing systems stamp native-text signature
+  lines onto scanned pages. If OCR fails, mark the page unreadable, record
   the error type without document text, and mark the document incomplete rather than
   producing a normal summary. Strip repeated headers/footers by rule.
   OCR uses the Tesseract engine built into PyMuPDF; only the Portuguese language data
