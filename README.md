@@ -16,3 +16,10 @@ uv run ruff check .
 ```
 
 Tests use only synthetic PDFs generated at test time. Never add real documents.
+
+Opt-in checks against a real local model (Ollama running, model pulled, cloud
+features disabled):
+
+```sh
+BRIEF_DIGEST_OLLAMA_MODEL=gemma4:12b uv run pytest -m ollama
+```

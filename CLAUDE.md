@@ -70,7 +70,13 @@ Pipeline, each stage idempotent and communicating through files plus a SQLite st
   or `TESSDATA_PREFIX`); never use PyMuPDF's auto-discovery, which runs shell commands.
 - **Summarization:** local LLM via Ollama on `localhost`. Map-reduce over chunks.
   Output sections are defined by a template, never hardcoded in Python (see
-  "Summary template" below).
+  "Summary template" below). Default model: `gemma4:12b` (Apache-2.0, ~8 GB Q4);
+  comparison candidate: `qwen3.5:9b`. Neither has been benchmarked on Portuguese legal
+  text; the model is a config value. The client uses the standard library, accepts
+  only loopback IP literals, refuses cloud models (name or remote-backed entry), and
+  checks the model is installed locally. Ollama itself must also run with cloud
+  features disabled (`OLLAMA_NO_CLOUD=1` or `disable_ollama_cloud` in
+  `~/.ollama/server.json`) on every machine that processes filings.
 - **Consistency checks:** match summary citations against extracted text and page
   references against page markers; flag unmatched items for human review. A match
   only confirms the text was found in the extraction — it does not establish legal
@@ -101,7 +107,7 @@ Default sections (in order):
 Each section must omit itself (not output "N/A") when the filing has no content for
 it, and every factual claim must carry a page reference back to `full.md`.
 
-### Making the template configurable (design requirement for Phase 4, not yet built)
+### Making the template configurable (implemented in Phase 4: `templates/default.yaml`)
 
 The template must be an external declarative file, not Python code, so a future
 change of format does not require touching the pipeline:
@@ -178,7 +184,7 @@ scheduled with `launchd`, one-command install script.
 6. Orchestration (SQLite state, watcher, `launchd`), packaging, install script
 7. Hardening, docs, handover
 
-Current phase: 3
+Current phase: 4
 
 ## How to work with the developer
 

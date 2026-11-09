@@ -78,6 +78,15 @@ def escape_markers(text: str) -> str:
     return text.replace("<!--", "&lt;!--")
 
 
+PAGE_MARKER = re.compile(r"^<!-- page (\d+) -->$", re.MULTILINE)
+
+
+def split_pages(full_md: str) -> dict[int, str]:
+    """Page number -> page text, from full.md."""
+    parts = PAGE_MARKER.split(full_md)
+    return {int(n): body.strip() for n, body in zip(parts[1::2], parts[2::2], strict=True)}
+
+
 _DIGITS = re.compile(r"\d+")
 
 
