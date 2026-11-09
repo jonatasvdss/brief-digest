@@ -23,3 +23,10 @@ features disabled):
 ```sh
 BRIEF_DIGEST_OLLAMA_MODEL=gemma4:12b uv run pytest -m ollama
 ```
+
+Compare models on the synthetic filings (rule-following metrics only, not legal
+quality):
+
+```sh
+uv run python scripts/eval_models.py gemma4:12b qwen3.5:9b
+```

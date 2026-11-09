@@ -73,7 +73,9 @@ Pipeline, each stage idempotent and communicating through files plus a SQLite st
   Output sections are defined by a template, never hardcoded in Python (see
   "Summary template" below). Default model: `gemma4:12b` (Apache-2.0, ~8 GB Q4);
   comparison candidate: `qwen3.5:9b`. Neither has been benchmarked on Portuguese legal
-  text; the model is a config value. The client uses the standard library, accepts
+  text; the model is a config value. Phase 5 synthetic comparison
+  (`scripts/eval_models.py`): both models follow the rules on all synthetic filings;
+  `gemma4:12b` is 2-3x faster on the dev machine, so it stays the default. The client uses the standard library, accepts
   only loopback IP literals, refuses cloud models (name or remote-backed entry), and
   checks the model is installed locally. Ollama itself must also run with cloud
   features disabled (`OLLAMA_NO_CLOUD=1` or `disable_ollama_cloud` in

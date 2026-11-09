@@ -81,7 +81,8 @@ o inclua no resumo.
 doutrina, fatos ou conclusões.
 - Em "paginas", indique os números das páginas (marcadores <!-- page N -->) onde cada \
 informação aparece.
-- Responda apenas com JSON no formato pedido. Seção sem conteúdo: lista vazia."""
+- Responda apenas com JSON no formato pedido. Seção sem conteúdo neste trecho: lista \
+vazia. Nunca crie itens como "Não informado", "Não consta" ou "N/A"."""
 
 MAP_TASK = "Extraia do trecho abaixo as informações de cada seção do resumo."
 REDUCE_TASK = (
@@ -91,6 +92,10 @@ REDUCE_TASK = (
 )
 
 _DELIMITER = re.compile(r"<(/?)documento", re.IGNORECASE)
+_PLACEHOLDER = re.compile(
+    r"(n/?a|-+|nada consta|sem (conteúdo|informaç(ão|ões))"
+    r"|não (informad[oa]s?|consta(m)?|há|se aplica|mencionad[oa]s?|identificad[oa]s?))\.?"
+)
 _TOOL_CLAIM = re.compile(
     r"\b(executei|rodei|acessei|enviei|baixei|naveguei|pesquisei na internet)\b"
     r"|tool_calls?|function_call|<tool",
@@ -149,6 +154,8 @@ def parse_sections(raw: str, template: Template, allowed_pages: set[int]) -> Sec
             text, pages = entry["texto"], entry["paginas"]
             if not (isinstance(text, str) and text.strip()):
                 raise SummaryRejected("schema_violation")
+            if pages == [] and _PLACEHOLDER.fullmatch(" ".join(text.split()).casefold()):
+                continue  # "Não informado" with no page: an empty section, not content
             if not (
                 isinstance(pages, list)
                 and pages

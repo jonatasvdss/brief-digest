@@ -35,6 +35,8 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "T20", "PTH", "SIM", "RUF", "TID"]
 "tests/**" = ["S101", "S311"]
 # Explicit, developer-run setup download (hard rule 5); never imported by the app.
 "scripts/fetch_tessdata.py" = ["TID251", "S310"]
+# Developer report printed to the console; synthetic documents only.
+"scripts/eval_models.py" = ["T20"]
 # The one runtime module allowed network access: loopback Ollama only (hard rule 5).
 "src/brief_digest/ollama.py" = ["TID251"]
 

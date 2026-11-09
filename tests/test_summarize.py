@@ -187,6 +187,25 @@ def test_rule_breaking_output_is_rejected_with_failure_type_only(
     assert "texto" not in json.dumps(status)
 
 
+@pytest.mark.parametrize("placeholder", ["Não informado", "N/A", "não consta.", "Sem informações"])
+def test_placeholder_items_without_pages_are_dropped(tmp_path: Path, placeholder: str) -> None:
+    work = make_workdir(tmp_path, {1: "texto"})
+    answer = {
+        "identificacao": [{"texto": "Partes fictícias", "paginas": [1]}],
+        "merito": [{"texto": placeholder, "paginas": []}],
+    }
+    assert summarize(work, FakeSummarizer(lambda *_: answer), config()).status == "ok"
+    summary = (work / SUMMARY_MD).read_text(encoding="utf-8")
+    assert "Mérito" not in summary and placeholder not in summary
+
+
+def test_placeholder_cannot_fill_a_required_section(tmp_path: Path) -> None:
+    work = make_workdir(tmp_path, {1: "texto"})
+    answer = {"identificacao": [{"texto": "Não informado", "paginas": []}]}
+    result = summarize(work, FakeSummarizer(lambda *_: answer), config())
+    assert result.failure_type == "missing_required_section"
+
+
 def test_summarizer_tool_call_is_a_rejection(tmp_path: Path) -> None:
     def tool_call(*_: object) -> str:
         raise SummaryRejected("tool_call")
