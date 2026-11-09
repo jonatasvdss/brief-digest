@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "pymupdf>=2.0",
     "pymupdf4llm>=2.0",
+    "pyyaml>=6.0.3",
 ]
 
 [dependency-groups]
@@ -34,6 +35,8 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "T20", "PTH", "SIM", "RUF", "TID"]
 "tests/**" = ["S101", "S311"]
 # Explicit, developer-run setup download (hard rule 5); never imported by the app.
 "scripts/fetch_tessdata.py" = ["TID251", "S310"]
+# The one runtime module allowed network access: loopback Ollama only (hard rule 5).
+"src/brief_digest/ollama.py" = ["TID251"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "requests".msg = "No network clients (rule 5). Only the Ollama module may talk to loopback."
@@ -49,3 +52,4 @@ testpaths = ["tests"]
 pythonpath = ["."]
 addopts = ["-ra", "--strict-markers", "--strict-config", "--import-mode=importlib"]
 xfail_strict = true
+markers = ["ollama: needs a local Ollama server and model; opt-in via BRIEF_DIGEST_OLLAMA_MODEL"]

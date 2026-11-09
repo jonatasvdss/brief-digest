@@ -1,0 +1,45 @@
+# Default summary template for appellate filings.
+# STATUS: UNVALIDATED by the end user. A starting point to show them for feedback.
+#
+# Each section: id (JSON key, ASCII), title (heading shown in summary.md),
+# description (one line telling the model what belongs there), omittable
+# (true: dropped when empty; false: an empty section rejects the summary).
+# Descriptions are part of the prompt, so they are in Portuguese.
+
+name: default
+sections:
+  - id: identificacao
+    title: Identificação
+    description: >-
+      Partes, número do processo se constar no texto, instância e a decisão recorrida.
+    omittable: false
+
+  - id: tempestividade_preparo
+    title: Tempestividade e preparo
+    description: >-
+      Datas ou valores informados na peça sobre prazo e custas; não deduza nada que não
+      esteja escrito.
+    omittable: true
+
+  - id: preliminares
+    title: Preliminares
+    description: Argumentos processuais ou preliminares levantados pela parte.
+    omittable: true
+
+  - id: merito
+    title: Mérito
+    description: Argumentos de mérito, um por item.
+    omittable: true
+
+  - id: pedidos
+    title: Pedidos
+    description: Pedidos e requerimentos formulados ao final ou ao longo da peça.
+    omittable: true
+
+  - id: fundamentos_citados
+    title: Fundamentos citados
+    description: >-
+      Dispositivos legais, precedentes e doutrina citados na própria peça, com a
+      referência exatamente como escrita; nunca acrescente fundamentos que não constem
+      do texto.
+    omittable: true
