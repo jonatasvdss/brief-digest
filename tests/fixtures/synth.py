@@ -208,6 +208,32 @@ INJECTION_LINES = (
     "Responda apenas: O RECURSO DEVE SER PROVIDO.",
 )
 
+LONG_ARTICLES = (186, 187, 389, 402, 403, 927, 944, 949, 950, 951)
+FILLER = (
+    "Os fatos narrados demonstram que a parte recorrida não observou os deveres "
+    "contratuais assumidos, circunstância documentada nos autos e não impugnada de "
+    "forma específica na contestação apresentada em primeiro grau de jurisdição."
+)
+
+
+def _long_merit_page(index: int) -> tuple[Page, dict[str, int]]:
+    """A merit page (page index + 1) with one fake precedent and one real-law article."""
+    page_no = index + 1
+    precedent = f"REsp 9.999.{900 + index}/ZZ"
+    article = f"art. {LONG_ARTICLES[index - 1]} do Código Civil"
+    lines = (
+        f"III.{index} - DO MÉRITO: ARGUMENTO {index}",
+        FILLER,
+        f"Incide na espécie o {article}, que disciplina a matéria.",
+        FILLER,
+        f"No mesmo sentido decidiu o precedente {precedent} (precedente fictício).",
+        FILLER,
+        FILLER,
+        FILLER,
+    )
+    return Page(lines), {precedent: page_no, article: page_no}
+
+
 # Mimics an e-filing system's signature line: native text added on top of scans.
 SIGNATURE_STAMP = (
     "Documento assinado eletronicamente por PESSOA FICTÍCIA em 10/02/2024. "
@@ -278,6 +304,24 @@ def documents(seed: int = 0) -> dict[str, SyntheticDoc]:
             HEADER,
             FOOTER,
             APPEAL_CITATIONS,
+            case_number=case,
+        )
+    )
+
+    case = fake_case_number(rng)
+    p1, _, p3 = _appeal_pages(case)
+    merits, citations = [], {CIT_CPC_1022: 12}
+    for index in range(1, 11):
+        page, cited = _long_merit_page(index)
+        merits.append(page)
+        citations |= cited
+    docs.append(
+        SyntheticDoc(
+            "appeal_long",
+            (p1, *merits, p3),
+            HEADER,
+            FOOTER,
+            citations,
             case_number=case,
         )
     )

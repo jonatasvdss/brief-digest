@@ -120,7 +120,11 @@ def build_schema(template: Template) -> dict[str, object]:
 
 
 def build_prompt(task: str, template: Template, quoted_text: str) -> str:
-    sections = "\n".join(f"- {s.id} ({s.title}): {s.description}" for s in template.sections)
+    sections = "\n".join(
+        f"- {s.id} ({s.title}): {s.description}"
+        + (" [transcrever literalmente]" if s.verbatim else "")
+        for s in template.sections
+    )
     return f"{task}\n\nSeções:\n{sections}\n\n{quote_document(quoted_text)}"
 
 

@@ -10,6 +10,7 @@ import yaml
 
 _ID = re.compile(r"[a-z][a-z0-9_]*")
 _SECTION_KEYS = {"id", "title", "description", "omittable"}
+_OPTIONAL_KEYS = {"verbatim"}
 
 
 class TemplateError(ValueError):
@@ -22,6 +23,7 @@ class Section:
     title: str
     description: str
     omittable: bool
+    verbatim: bool = False  # items are literal transcriptions; the verifier checks them
 
 
 @dataclass(frozen=True)
@@ -37,8 +39,11 @@ class Template:
 def _section(raw: object, index: int) -> Section:
     if not isinstance(raw, dict):
         raise TemplateError(f"section {index} is not a mapping")
-    if set(raw) != _SECTION_KEYS:
-        raise TemplateError(f"section {index} must have exactly the keys {sorted(_SECTION_KEYS)}")
+    if not _SECTION_KEYS <= set(raw) <= _SECTION_KEYS | _OPTIONAL_KEYS:
+        raise TemplateError(
+            f"section {index} needs the keys {sorted(_SECTION_KEYS)}"
+            f" and may add {sorted(_OPTIONAL_KEYS)}"
+        )
     sid, title, description, omittable = (
         raw[k] for k in ("id", "title", "description", "omittable")
     )
@@ -51,7 +56,10 @@ def _section(raw: object, index: int) -> Section:
         raise TemplateError(f"section {index}: description must be one line")
     if not isinstance(omittable, bool):
         raise TemplateError(f"section {index}: omittable must be true or false")
-    return Section(sid, title.strip(), description.strip(), omittable)
+    verbatim = raw.get("verbatim", False)
+    if not isinstance(verbatim, bool):
+        raise TemplateError(f"section {index}: verbatim must be true or false")
+    return Section(sid, title.strip(), description.strip(), omittable, verbatim)
 
 
 def load_template(path: Path) -> Template:

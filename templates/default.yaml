@@ -3,7 +3,9 @@
 #
 # Each section: id (JSON key, ASCII), title (heading shown in summary.md),
 # description (one line telling the model what belongs there), omittable
-# (true: dropped when empty; false: an empty section rejects the summary).
+# (true: dropped when empty; false: an empty section rejects the summary), and
+# optionally verbatim (true: items must be literal transcriptions of the filing;
+# the verification stage checks each one against the extracted text).
 # Descriptions are part of the prompt, so they are in Portuguese.
 
 name: default
@@ -43,3 +45,4 @@ sections:
       referência exatamente como escrita; nunca acrescente fundamentos que não constem
       do texto.
     omittable: true
+    verbatim: true

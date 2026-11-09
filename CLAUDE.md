@@ -43,8 +43,9 @@ with a local LLM. Everything runs on the end user's own machine. No data leaves 
   the user by hand; there is NO browser automation in this project).
 - Output: for each PDF, `full.md` (converted text with page markers) and
   `summary.md` (structured draft summary).
-- Every generated summary starts with a banner: "Auxiliary reading aid. Draft.
-  Verify against the original filing."
+- Every generated summary starts with a banner, in Portuguese like the rest of the
+  output: "Auxílio de leitura. Rascunho. Confira com a peça original." (meaning
+  "Auxiliary reading aid. Draft. Verify against the original filing.").
 - Data retention: delete the source PDF, extracted text, summaries, OCR
   intermediates, and document-specific database state 7 days after successful
   processing, or 7 days after the last attempt for failed jobs. Never delete
@@ -81,7 +82,12 @@ Pipeline, each stage idempotent and communicating through files plus a SQLite st
   references against page markers; flag unmatched items for human review. A match
   only confirms the text was found in the extraction — it does not establish legal
   accuracy, correct attribution, or extraction fidelity, and must never be described
-  as confirming a summary's correctness.
+  as confirming a summary's correctness. Implemented in `verify.py`: page references
+  must exist; items of `verbatim: true` template sections must appear on a cited
+  page; legal references (articles, laws, súmulas, precedents, temas) inside other
+  items must appear on a cited page. Failing items get an inline mark in
+  `summary.md`; passing items get none. Reference matching compares kind and number
+  only (e.g. "art. 1.022"), not the statute named after it.
 - Only two abstractions: `Summarizer` (the model) and the file-based pipeline stages.
   Do not add more layers.
 
@@ -113,7 +119,8 @@ The template must be an external declarative file, not Python code, so a future
 change of format does not require touching the pipeline:
 
 - A `templates/*.yaml` (or `.json`) file lists sections in order, each with a name,
-  a one-line description of what belongs in it, and whether it is omittable.
+  a one-line description of what belongs in it, whether it is omittable, and
+  optionally whether it is verbatim (checked literally by the verifier).
 - The pipeline loads the active template path from a config value (not hardcoded),
   builds the map-reduce prompts from it, and validates model output against the
   declared section names.
@@ -184,7 +191,7 @@ scheduled with `launchd`, one-command install script.
 6. Orchestration (SQLite state, watcher, `launchd`), packaging, install script
 7. Hardening, docs, handover
 
-Current phase: 4
+Current phase: 5
 
 ## How to work with the developer
 
