@@ -46,6 +46,7 @@ class ExtractConfig:
     tessdata: Path | None = None  # None: TESSDATA_PREFIX; never auto-discovered
     edge_lines: int = 2  # lines at each end of a page checked for headers/footers
     repeat_ratio: float = 0.5  # share of pages an edge line must repeat on
+    max_edge_chars: int = 160  # longer lines are body text, never stripped
 
 
 @dataclass(frozen=True)
@@ -95,11 +96,12 @@ def _normalize(line: str) -> str:
 
 
 def strip_repeated_edges(
-    pages: list[str], edge_lines: int = 2, repeat_ratio: float = 0.5
+    pages: list[str], edge_lines: int = 2, repeat_ratio: float = 0.5, max_chars: int = 160
 ) -> list[str]:
-    """Drop header/footer lines: same position from the page top or bottom, same text
-    (digits ignored), on at least repeat_ratio of the pages. Zones never overlap, so
-    short pages keep their body."""
+    """Drop header/footer lines: short (at most max_chars), at the same position from
+    the page top or bottom, same text (digits ignored), on at least repeat_ratio of the
+    pages. Zones never overlap, so short pages keep their body, and long lines are
+    never stripped, so repeated body paragraphs survive."""
     if len(pages) < 2:
         return pages
     split: list[tuple[list[str], dict[int, tuple[str, int, str]]]] = []
@@ -108,8 +110,13 @@ def strip_repeated_edges(
         lines = text.split("\n")
         filled = [i for i, line in enumerate(lines) if line.strip()]
         k = min(edge_lines, (len(filled) - 1) // 2)
-        keys = {i: ("top", n, _normalize(lines[i])) for n, i in enumerate(filled[:k])}
-        keys |= {i: ("bottom", n, _normalize(lines[i])) for n, i in enumerate(filled[::-1][:k])}
+        zones = [("top", filled[:k]), ("bottom", filled[::-1][:k])]
+        keys = {
+            i: (zone, n, _normalize(lines[i]))
+            for zone, indexes in zones
+            for n, i in enumerate(indexes)
+            if len(lines[i].strip()) <= max_chars
+        }
         split.append((lines, keys))
         counts.update(set(keys.values()))
     needed = max(2, math.ceil(repeat_ratio * len(pages)))
@@ -203,7 +210,10 @@ def _read_pages(pdf_path: Path, config: ExtractConfig) -> tuple[list[PageResult]
                 log.warning("page %d unreadable error_type=%s", i + 1, type(exc).__name__)
 
     cleaned = strip_repeated_edges(
-        [texts[i] for i in range(len(methods))], config.edge_lines, config.repeat_ratio
+        [texts[i] for i in range(len(methods))],
+        config.edge_lines,
+        config.repeat_ratio,
+        config.max_edge_chars,
     )
     results = [
         PageResult(i + 1, method, non_space_chars(cleaned[i]), error)

@@ -17,7 +17,7 @@ from brief_digest.extract import (
     extract,
     strip_repeated_edges,
 )
-from tests.fixtures.synth import FOOTER, HEADER, INJECTION_LINES, SyntheticDoc
+from tests.fixtures.synth import FILLER, FOOTER, HEADER, INJECTION_LINES, SyntheticDoc
 
 MARKER = re.compile(r"^<!-- page (\d+) -->$", re.MULTILINE)
 
@@ -214,6 +214,22 @@ def test_strip_repeated_edges_ignores_page_numbers_and_body_repeats() -> None:
     stripped = strip_repeated_edges(pages)
     for (a, b), text in zip(bodies, stripped, strict=True):
         assert text.splitlines() == [f"Texto {a}", "linha repetida no meio", f"mais texto {b}"]
+
+
+def test_repeated_long_body_paragraphs_at_page_bottom_are_kept(
+    synthetic_pdfs: dict[str, Path], tmp_path: Path
+) -> None:
+    item = run(synthetic_pdfs["appeal_long"], tmp_path, ExtractConfig())
+    for page in range(2, 12):
+        assert squash(item.pages[page]).count(squash(FILLER)) == 5, page
+
+
+def test_strip_repeated_edges_ignores_long_lines() -> None:
+    long_line = ("parágrafo repetido " * 12).strip()
+    pages = [f"Topo\ncorpo {n}\n{long_line}" for n in ("um", "dois", "três")]
+    assert strip_repeated_edges(pages) == [
+        f"corpo {n}\n{long_line}" for n in ("um", "dois", "três")
+    ]
 
 
 def test_strip_repeated_edges_keeps_single_page_and_unique_lines() -> None:
