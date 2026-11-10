@@ -90,6 +90,19 @@ Pipeline, each stage idempotent and communicating through files plus a SQLite st
   items must appear on a cited page. Failing items get an inline mark in
   `summary.md`; passing items get none. Reference matching compares kind and number
   only (e.g. "art. 1.022"), not the statute named after it.
+- **Orchestration** (`pipeline.py`, `state.py`, `config.py`, `cli.py`): one data
+  folder holds `Entrada/` (inbox), `Resumos/<file name>/` (one folder per PDF, with
+  `original.pdf` and all outputs), `config.toml`, and `.state/` (SQLite db, logs). The
+  watcher polls the inbox, claims a PDF once its size and mtime are unchanged between
+  two scans by moving it into its own folder, then runs extract, summarize, verify.
+  Model-server failures are retried (3 attempts, 10 minutes apart); rejected output,
+  incomplete extraction, and document errors are final and leave a notice in
+  `summary.md`. Documents wait, without using attempts, while Ollama is unreachable.
+  Retention deletes a finished job's folder and db row together and refuses any
+  path not directly inside `Resumos/`. Logs name documents by job number only,
+  never by folder or file name, and never include exception messages or tracebacks.
+  `scripts/install.py` checks prerequisites, writes the config, and registers the
+  `launchd` agent; it downloads nothing.
 - Only two abstractions: `Summarizer` (the model) and the file-based pipeline stages.
   Do not add more layers.
 
@@ -193,7 +206,7 @@ scheduled with `launchd`, one-command install script.
 6. Orchestration (SQLite state, watcher, `launchd`), packaging, install script
 7. Hardening, docs, handover
 
-Current phase: 5
+Current phase: 6
 
 ## How to work with the developer
 

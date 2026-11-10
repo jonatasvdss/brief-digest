@@ -29,6 +29,10 @@ logs/
 inbox/
 outbox/
 data/
+Entrada/
+Resumos/
+.state/
+config.toml
 tests/fixtures/generated/
 
 # OCR language data (fetched by scripts/fetch_tessdata.py)

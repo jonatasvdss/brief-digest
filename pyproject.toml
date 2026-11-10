@@ -10,6 +10,9 @@ dependencies = [
     "pyyaml>=6.0.3",
 ]
 
+[project.scripts]
+brief-digest = "brief_digest.cli:main"
+
 [dependency-groups]
 dev = [
     "pytest>=8",
@@ -37,6 +40,8 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "T20", "PTH", "SIM", "RUF", "TID"]
 "scripts/fetch_tessdata.py" = ["TID251", "S310"]
 # Developer report printed to the console; synthetic documents only.
 "scripts/eval_models.py" = ["T20"]
+# Developer-run setup: console output, and launchctl called by absolute path.
+"scripts/install.py" = ["T20"]
 # The one runtime module allowed network access: loopback Ollama only (hard rule 5).
 "src/brief_digest/ollama.py" = ["TID251"]
 
