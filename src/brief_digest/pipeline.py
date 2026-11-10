@@ -239,7 +239,15 @@ def watch(
         return True
 
     try:
-        log.info("watching jobs=%s", state.counts(conn))
+        known = state.folders(conn)
+        untracked = sum(1 for p in config.output.iterdir() if p.name not in known)
+        # Untracked folders are never deleted by retention: they need a human look.
+        log.log(
+            logging.WARNING if untracked else logging.INFO,
+            "watching jobs=%s untracked_folders=%d",
+            state.counts(conn),
+            untracked,
+        )
         seen: Seen = {}
         next_purge = 0.0
         done = 0

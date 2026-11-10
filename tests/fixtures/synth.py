@@ -332,3 +332,9 @@ def documents(seed: int = 0) -> dict[str, SyntheticDoc]:
 def build_all(out_dir: Path, seed: int = 0) -> dict[str, Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
     return {name: write_pdf(doc, out_dir / f"{name}.pdf") for name, doc in documents(seed).items()}
+
+
+if __name__ == "__main__":  # uv run python -m tests.fixtures.synth OUT_DIR
+    import sys
+
+    build_all(Path(sys.argv[1]))

@@ -1,0 +1,46 @@
+BRIEF-DIGEST - COMO USAR
+
+O que é
+-------
+Um auxílio de leitura. Para cada peça em PDF, o programa gera o texto da peça e um
+rascunho de resumo. Tudo é feito neste computador; nada é enviado para a internet.
+
+O resumo é um RASCUNHO feito por um modelo de linguagem. Ele pode omitir, trocar ou
+inventar informações. Confira sempre com a peça original.
+
+Como usar
+---------
+1. Copie ou mova o PDF para a pasta "Entrada".
+2. Aguarde. O arquivo some da pasta "Entrada" quando o programa começa a trabalhar
+   nele. Peças curtas levam alguns segundos; peças longas ou digitalizadas podem
+   levar vários minutos.
+3. Abra a pasta "Resumos". Cada peça tem uma pasta com o nome do arquivo, contendo:
+   - original.pdf  a peça enviada
+   - full.md       o texto da peça, com a marcação de cada página
+   - summary.md    o rascunho de resumo
+   Os demais arquivos são de controle do programa.
+
+Como ler o resumo
+-----------------
+- Cada item indica a página de onde veio, por exemplo "(p. 3)".
+- Um item com o sinal "⚠ Conferir:" não foi localizado na página indicada. Verifique
+  esse item na peça original antes de usá-lo.
+- Um item sem sinal apenas foi encontrado no texto. Isso não garante que o resumo
+  esteja correto.
+- "Resumo não gerado" ou "Extração incompleta": o programa não conseguiu processar
+  a peça. Leia a peça original.
+
+Atenção: os arquivos são apagados
+---------------------------------
+Sete dias depois de processada, a pasta da peça é apagada por inteiro: o PDF, o texto,
+o resumo e qualquer outro arquivo salvo dentro dela. Se precisar guardar algo, copie
+para outro lugar antes. Não guarde anotações dentro da pasta "Resumos".
+
+Esta pasta não entra no backup do Time Machine.
+
+Se algo não funcionar
+---------------------
+- O PDF continua na pasta "Entrada" depois de alguns minutos: confirme que o nome do
+  arquivo termina em ".pdf" e avise quem instalou o programa.
+- A pasta da peça aparece em "Resumos", mas sem o resumo: o programa pode estar
+  aguardando o modelo. Verifique se o Ollama está aberto e aguarde alguns minutos.

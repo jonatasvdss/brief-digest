@@ -1,12 +1,14 @@
 """Set up brief-digest on this machine: data folders, config file and, on macOS, a
 launchd agent that keeps the watcher running.
 
-Usage: uv run --no-dev python scripts/install.py [--data-dir DIR] [--model NAME]
-       uv run --no-dev python scripts/install.py --uninstall
+Usage: uv run --locked --no-dev python scripts/install.py [--data-dir DIR] [--model NAME]
+       uv run --locked --no-dev python scripts/install.py --uninstall
 
 This script downloads nothing (hard rule 5). It checks that the OCR data and the
 model are already installed and that Ollama's cloud features are off, and stops
-with instructions if not. Uninstalling removes the agent and leaves the data folder.
+with instructions if not. It makes the data folder private to the current user and,
+on macOS, excludes it from Time Machine, so backups do not outlive the 7-day
+retention. Uninstalling removes the agent and leaves the data folder.
 """
 
 from __future__ import annotations
@@ -15,6 +17,7 @@ import argparse
 import json
 import os
 import plistlib
+import shutil
 import subprocess
 import sys
 import time
@@ -28,6 +31,8 @@ REPO = Path(__file__).resolve().parent.parent
 LABEL = "local.brief-digest.watcher"
 CONFIG_NAME = "config.toml"
 LAUNCHCTL = "/bin/launchctl"
+TMUTIL = "/usr/bin/tmutil"
+USER_GUIDE = "LEIA-ME.txt"
 # macOS asks for per-app permission to read these; a background agent cannot answer.
 PROTECTED = ("Documents", "Desktop", "Downloads")
 
@@ -96,8 +101,26 @@ def _plist_path(home: Path) -> Path:
     return home / "Library" / "LaunchAgents" / f"{LABEL}.plist"
 
 
+def _run(*command: str) -> int:
+    try:
+        return subprocess.run(command, check=False, capture_output=True).returncode  # noqa: S603
+    except OSError:
+        return 127
+
+
 def _launchctl(*args: str) -> int:
-    return subprocess.run([LAUNCHCTL, *args], check=False, capture_output=True).returncode  # noqa: S603
+    return _run(LAUNCHCTL, *args)
+
+
+def make_private(data_dir: Path) -> None:
+    """Owner-only access to the data folder and so to everything under it."""
+    if os.name == "posix":
+        data_dir.chmod(0o700)
+
+
+def exclude_from_backups(data_dir: Path) -> bool:
+    """Sticky Time Machine exclusion: it follows the folder if it is moved."""
+    return _run(TMUTIL, "addexclusion", str(data_dir)) == 0
 
 
 def stop_agent() -> None:
@@ -148,6 +171,8 @@ def main(argv: list[str]) -> int:
         return 1
     for folder in (config.inbox, config.output, config.state_dir):
         folder.mkdir(parents=True, exist_ok=True)
+    make_private(config.data_dir)
+    shutil.copyfile(REPO / "docs" / USER_GUIDE, config.data_dir / USER_GUIDE)
 
     problems = preflight(config, home, macos)
     if problems:
@@ -160,6 +185,10 @@ def main(argv: list[str]) -> int:
     if not macos:
         print(f"Checks passed. No launchd on this system; run the watcher by hand:\n  {command}")
         return 0
+    if not exclude_from_backups(config.data_dir):
+        print("Not installed: could not exclude the data folder from Time Machine. Check with:")
+        print(f'  tmutil addexclusion "{config.data_dir}"')
+        return 1
     if not start_agent(home, config_path):
         print(f"launchd refused the agent. Run the watcher by hand to see why:\n  {command}")
         return 1

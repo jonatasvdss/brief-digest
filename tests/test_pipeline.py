@@ -393,3 +393,22 @@ def test_watch_keeps_documents_queued_while_the_model_is_down(
         assert [(j.status, j.attempts) for j in all_jobs(conn)] == [("queued", 0)]
     finally:
         conn.close()
+
+
+def test_watch_warns_about_folders_retention_will_never_delete(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    config = AppConfig(
+        data_dir=tmp_path / "data",
+        template=DEFAULT_TEMPLATE,
+        tessdata=tmp_path / "none",
+        poll_seconds=0.01,
+    )
+    (config.output / "pasta-desconhecida").mkdir(parents=True)
+    with caplog.at_level(logging.INFO):
+        watch(config, FakeSummarizer(per_page), lambda: None, cycles=1)
+    (record,) = [r for r in caplog.records if "untracked_folders" in r.getMessage()]
+    assert record.levelno == logging.WARNING
+    assert "untracked_folders=1" in record.getMessage()
+    assert "pasta-desconhecida" not in caplog.text
+    assert (config.output / "pasta-desconhecida").is_dir()

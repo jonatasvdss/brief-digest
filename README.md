@@ -4,7 +4,9 @@ A local tool that converts court filings (PDF) to text and drafts structured sum
 with a local LLM. Everything runs on the user's own machine; no data leaves it.
 
 Status: in development. The pipeline runs end to end on synthetic documents; the
-macOS install has not been tried on a Mac yet.
+macOS install has not been tried on a Mac yet. Installing and operating it:
+[docs/handover.md](docs/handover.md). End-user guide (Portuguese):
+[docs/LEIA-ME.txt](docs/LEIA-ME.txt).
 
 ## How it works
 
@@ -22,9 +24,10 @@ A PDF is picked up once it has stopped changing, moved into its own folder under
 `summary.md` says so instead.
 
 **Each document folder is deleted 7 days after processing finished**, including the
-PDF and anything else saved inside it. Copy elsewhere what must be kept. Backups and
-snapshots of the data folder (Time Machine, for example) are outside the app's
-control and keep their own copies.
+PDF and anything else saved inside it. Copy elsewhere what must be kept. The
+installer makes the data folder private to its owner and excludes it from Time
+Machine; other backup or sync tools are outside the app's control and keep their
+own copies, so keep the folder out of synced locations.
 
 ## Install on macOS
 
@@ -34,13 +37,13 @@ Keep the repository and the data folder out of Documents, Desktop and Downloads:
 background agent cannot read those.
 
 ```sh
-uv run python scripts/fetch_tessdata.py   # one-time download: Portuguese OCR data
-ollama pull gemma4:12b                    # one-time download: the model
-uv run --no-dev python scripts/install.py
+uv run --locked python scripts/fetch_tessdata.py   # one-time download: Portuguese OCR data
+ollama pull gemma4:12b                             # one-time download: the model
+uv run --locked --no-dev python scripts/install.py
 ```
 
 The installer downloads nothing. It checks the prerequisites, creates the data
-folder and `config.toml`, and registers a `launchd` agent that starts the watcher at
+folder with `config.toml` and the user guide, and registers a `launchd` agent that starts the watcher at
 login and restarts it if it stops. Run it again after moving the repository.
 `--uninstall` removes the agent and leaves the data folder.
 

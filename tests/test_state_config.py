@@ -1,4 +1,5 @@
 import json
+import os
 import plistlib
 from pathlib import Path
 
@@ -188,3 +189,27 @@ def test_preflight_lists_everything_that_is_missing(tmp_path: Path) -> None:
     assert "ollama_unavailable" in problems
     assert "Documents, Desktop or Downloads" in problems
     assert "Documents, Desktop" not in "\n".join(install.preflight(config, home, macos=False))
+
+
+def test_backup_exclusion_reports_failure_when_the_tool_is_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(install, "TMUTIL", str(tmp_path / "no-such-tool"))
+    assert install.exclude_from_backups(tmp_path) is False
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX permissions")
+def test_data_folder_is_made_owner_only(tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    data_dir.mkdir(mode=0o755)
+    install.make_private(data_dir)
+    assert data_dir.stat().st_mode & 0o777 == 0o700
+
+
+def test_user_guide_states_the_draft_warning_and_the_deletion() -> None:
+    guide = (REPO_ROOT / "docs" / install.USER_GUIDE).read_text(encoding="utf-8")
+    assert "RASCUNHO" in guide
+    assert "Confira sempre com a peça original" in guide
+    assert "Sete dias" in guide
+    assert "Entrada" in guide
+    assert "Resumos" in guide

@@ -101,8 +101,10 @@ Pipeline, each stage idempotent and communicating through files plus a SQLite st
   Retention deletes a finished job's folder and db row together and refuses any
   path not directly inside `Resumos/`. Logs name documents by job number only,
   never by folder or file name, and never include exception messages or tracebacks.
-  `scripts/install.py` checks prerequisites, writes the config, and registers the
-  `launchd` agent; it downloads nothing.
+  `scripts/install.py` checks prerequisites, writes the config, makes the data
+  folder owner-only, excludes it from Time Machine, copies the Portuguese user guide
+  (`docs/LEIA-ME.txt`) into it, and registers the `launchd` agent; it downloads
+  nothing. Operator instructions and the post-install checklist: `docs/handover.md`.
 - Only two abstractions: `Summarizer` (the model) and the file-based pipeline stages.
   Do not add more layers.
 
@@ -206,7 +208,7 @@ scheduled with `launchd`, one-command install script.
 6. Orchestration (SQLite state, watcher, `launchd`), packaging, install script
 7. Hardening, docs, handover
 
-Current phase: 6
+Current phase: 7
 
 ## How to work with the developer
 
