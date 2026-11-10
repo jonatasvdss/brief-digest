@@ -50,6 +50,8 @@ with a local LLM. Everything runs on the end user's own machine. No data leaves 
   intermediates, and document-specific database state 7 days after successful
   processing, or 7 days after the last attempt for failed jobs. Never delete
   anything outside the application's managed folders.
+  A PDF that is still waiting to be processed is kept, however long it waits
+  (decided): retention never deletes a document that has not been attempted.
 
 ## Architecture
 
