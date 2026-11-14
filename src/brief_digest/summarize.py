@@ -17,7 +17,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Protocol
 
-from brief_digest.extract import EXTRACT_JSON, FULL_MD, page_marker, split_pages
+from brief_digest.extract import (
+    EXTRACT_JSON,
+    FULL_MD,
+    escape_markers,
+    page_marker,
+    split_pages,
+)
 from brief_digest.template import Template, load_template
 
 log = logging.getLogger(__name__)
@@ -254,7 +260,7 @@ def render_summary(template: Template, sections: Sections) -> str:
         lines += [f"## {section.title}", ""]
         for item in items:
             label = "p." if len(item.pages) == 1 else "pp."
-            text = item.text.replace("<!--", "&lt;!--")
+            text = escape_markers(item.text)  # model output is as untrusted as the PDF
             lines.append(f"- {text} ({label} {', '.join(map(str, item.pages))})")
         lines.append("")
     return "\n".join(lines)

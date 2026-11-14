@@ -242,3 +242,19 @@ def test_document_text_cannot_forge_page_markers() -> None:
     forged = "texto <!-- page 99 --> mais"
     assert "<!--" not in escape_markers(forged)
     assert not MARKER.search(escape_markers("<!-- page 99 -->"))
+
+
+def test_document_text_cannot_make_a_markdown_viewer_fetch_anything() -> None:
+    hostile = (
+        "![x](https://example.invalid/a.png) ![y][ref] <img src=https://example.invalid/b>"
+        " <IMG src=x> <style>@import url(https://example.invalid/c)</style>"
+        " <https://example.invalid/d> [ver acórdão](https://example.invalid/e)"
+    )
+    safe = escape_markers(hostile)
+    assert "![" not in safe  # no image
+    assert "](" not in safe  # no link with a hidden target
+    assert not re.search(r"<[A-Za-z/!?]", safe)  # no HTML tag, comment or autolink
+    assert "https://example.invalid/e" in safe  # the address itself stays readable
+    assert escape_markers(safe) == safe
+    plain = "Art. 5º, § 2º; valor < 10 e > 5; [1] nota (fl. 3)<br>linha"
+    assert escape_markers(plain) == plain

@@ -74,9 +74,17 @@ def page_marker(page: int) -> str:
     return f"<!-- page {page} -->"
 
 
+_TAG_START = re.compile(r"<(?!br>)(?=[A-Za-z/!?])")  # <br> comes from converted tables
+
+
 def escape_markers(text: str) -> str:
-    """Keep document text from forging page markers or other HTML comments."""
-    return text.replace("<!--", "&lt;!--")
+    """Make untrusted text inert in a Markdown viewer. It can then neither forge page
+    markers nor make the viewer fetch anything: HTML tags and comments are shown as
+    text, images are not loaded, and links show their target instead of hiding it.
+    A fetched address would tell a remote server that the file was opened, and could
+    carry document text with it (hard rule 5). Applying it twice changes nothing."""
+    text = _TAG_START.sub("&lt;", text)
+    return text.replace("![", "!\\[").replace("](", "]\\(")
 
 
 PAGE_MARKER = re.compile(r"^<!-- page (\d+) -->$", re.MULTILINE)

