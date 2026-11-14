@@ -107,6 +107,16 @@ Pipeline, each stage idempotent and communicating through files plus a SQLite st
   folder owner-only, excludes it from Time Machine, copies the Portuguese user guide
   (`docs/LEIA-ME.txt`) into it, and registers the `launchd` agent; it downloads
   nothing. Operator instructions and the post-install checklist: `docs/handover.md`.
+- **End-user setup** (`Instalar.command`, `scripts/setup_mac.py`): the one explicit,
+  confirmed setup action that downloads things (uv, the Ollama app, OCR data, the
+  model), approved by the developer as the install path for a non-technical user.
+  It copies the program to `~/.brief-digest`, runs Ollama's bundled server as the
+  agent `local.brief-digest.ollama` (loopback, `OLLAMA_NO_CLOUD=1`; the desktop app
+  is not opened), then runs `scripts/install.py` and a self-test with a synthetic
+  filing. `Trocar modelo.command` (`scripts/set_model.py`) switches the model;
+  `Diagnostico.command` (`scripts/diagnose.py`) writes a report with no document
+  text, file names, or home path. User-facing text in these tools is Portuguese.
+  The manual `install-smoke` workflow runs all of this on a macOS runner.
 - Only two abstractions: `Summarizer` (the model) and the file-based pipeline stages.
   Do not add more layers.
 

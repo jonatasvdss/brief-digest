@@ -4,7 +4,7 @@ A local tool that converts court filings (PDF) to text and drafts structured sum
 with a local LLM. Everything runs on the user's own machine; no data leaves it.
 
 Status: in development. The pipeline runs end to end on synthetic documents; the
-macOS install has not been tried on a Mac yet. Installing and operating it:
+macOS installer is exercised on a clean macOS CI runner, not yet on the target Mac. Installing and operating it:
 [docs/handover.md](docs/handover.md). End-user guide (Portuguese):
 [docs/LEIA-ME.txt](docs/LEIA-ME.txt).
 
@@ -31,21 +31,25 @@ own copies, so keep the folder out of synced locations.
 
 ## Install on macOS
 
-Prerequisites: [uv](https://docs.astral.sh/uv/), and Ollama running with its cloud
-features disabled (`{"disable_ollama_cloud": true}` in `~/.ollama/server.json`).
-Keep the repository and the data folder out of Documents, Desktop and Downloads: a
-background agent cannot read those.
+Unzip the project anywhere and double-click `Instalar.command`. After one
+confirmation it installs what is missing (uv, Ollama, the Portuguese OCR data, the
+model), turns Ollama cloud features off, registers background agents for the
+Ollama server and the watcher, and checks itself with a synthetic filing. Details,
+and what to do if macOS blocks the double-click: [docs/handover.md](docs/handover.md).
+
+The installer puts two more launchers in the data folder: `Trocar modelo.command`
+switches the Ollama model, and `Diagnostico.command` writes a report with no
+document text or file names, for sending to whoever maintains the install.
+
+Developer route, with uv, Ollama, the OCR data and the model already in place, and
+the repository outside Documents, Desktop and Downloads:
 
 ```sh
-uv run --locked python scripts/fetch_tessdata.py   # one-time download: Portuguese OCR data
-ollama pull gemma4:12b                             # one-time download: the model
 uv run --locked --no-dev python scripts/install.py
 ```
 
-The installer downloads nothing. It checks the prerequisites, creates the data
-folder with `config.toml` and the user guide, and registers a `launchd` agent that starts the watcher at
-login and restarts it if it stops. Run it again after moving the repository.
-`--uninstall` removes the agent and leaves the data folder.
+It downloads nothing and stops with a list if a prerequisite is missing.
+`--uninstall` removes the agents and leaves the data folder.
 
 To run the watcher by hand instead (any platform):
 

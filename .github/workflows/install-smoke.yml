@@ -36,7 +36,6 @@ jobs:
       - name: Ollama state (for debugging a failed install)
         if: always()
         run: |
-          ls -la /Applications/Ollama.app/Contents/MacOS /Applications/Ollama.app/Contents/Resources || true
           pgrep -fl -i ollama || true
           launchctl print "gui/$(id -u)/local.brief-digest.ollama" | grep -E "state = |program = " || true
           lsof -nP -iTCP:11434 -sTCP:LISTEN || true

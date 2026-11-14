@@ -38,9 +38,21 @@ para outro lugar antes. Não guarde anotações dentro da pasta "Resumos".
 
 Esta pasta não entra no backup do Time Machine.
 
+Trocar o modelo
+---------------
+O resumo é escrito por um modelo de linguagem instalado neste computador. Para usar
+outro modelo, dê dois cliques em "Trocar modelo.command", nesta pasta, e digite o
+número do modelo desejado. Se ele ainda não estiver instalado, será baixado (vários
+GB). A troca vale para os próximos PDFs. Para refazer um resumo com o novo modelo,
+copie o arquivo original.pdf da pasta da peça de volta para a pasta "Entrada".
+
 Se algo não funcionar
 ---------------------
 - O PDF continua na pasta "Entrada" depois de alguns minutos: confirme que o nome do
-  arquivo termina em ".pdf" e avise quem instalou o programa.
+  arquivo termina em ".pdf".
 - A pasta da peça aparece em "Resumos", mas sem o resumo: o programa pode estar
   aguardando o modelo. Verifique se o Ollama está aberto e aguarde alguns minutos.
+- Se o problema continuar, dê dois cliques em "Diagnostico.command", nesta pasta, e
+  envie o arquivo "diagnostico.txt" a quem instalou o programa. Esse arquivo não
+  contém o texto nem os nomes das peças. Não envie PDFs, resumos nem capturas de
+  tela das peças.

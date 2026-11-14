@@ -4,46 +4,91 @@ For whoever installs and looks after brief-digest on the end user's Mac. The end
 user's own guide is `LEIA-ME.txt` (Portuguese), which the installer copies into the
 data folder.
 
-**Not yet verified on a Mac:** the `launchd` registration, the Time Machine
-exclusion, and macOS folder permissions for the background agent. The steps under
-"Check the install" exist to verify them. Everything else is covered by tests on
-macOS CI.
+**What has been verified, and where.** The manual `install-smoke` CI workflow runs
+the real installer on a clean macOS runner with synthetic documents: uv and Ollama
+install, both `launchd` agents, the Time Machine exclusion, folder permissions, the
+example summary, the model switcher, the diagnostic report and uninstall. Not
+verified anywhere: double-clicking a `.command` file that arrived in a downloaded
+ZIP (macOS may block it, see below), behaviour across a reboot, a Mac where the
+Ollama desktop app is already running, and the default model on the real hardware
+(the runner uses a small model).
 
 ## Rules that do not change at install time
 
-- Use only synthetic PDFs to test the install. Never test with a real filing while
-  someone else is watching the screen or sharing it, and never copy logs or outputs
-  of real filings off the machine.
+- The installer tests itself with a synthetic filing. Real filings are handled only
+  by the legal professional, alone; outputs of real filings never leave the machine.
 - No hosted model, no remote Ollama. The config only accepts `127.0.0.1` or `::1`.
 - The summary is a reading aid. The legal professional must be told, in person, that
   it can be wrong and that the document folder is deleted after 7 days.
 
 ## Install
 
-1. Install [uv](https://docs.astral.sh/uv/) and Ollama.
-2. Disable Ollama's cloud features: put `{"disable_ollama_cloud": true}` in
-   `~/.ollama/server.json`, restart Ollama, and confirm its log reports cloud
-   disabled. In Ollama's settings, also set it to start at login and turn automatic
-   updates off if the option exists; an update can change model behaviour or
-   defaults without anyone noticing.
-3. Put the repository somewhere in the home folder that is **not** Documents,
-   Desktop or Downloads.
-4. Run the two one-time downloads and the installer:
+The end user does this alone:
 
-   ```sh
-   uv run --locked python scripts/fetch_tessdata.py
-   ollama pull gemma4:12b
-   uv run --locked --no-dev python scripts/install.py
-   ```
+1. Unzip the project folder anywhere (Downloads is fine).
+2. Double-click `Instalar.command` and answer the one confirmation.
 
-The installer stops with a list if a prerequisite is missing. On success it has:
-created `~/BriefDigest` (owner-only), written `config.toml` and `LEIA-ME.txt` there,
-excluded the folder from Time Machine, and registered the agent
-`local.brief-digest.watcher`.
+If macOS refuses to open the file because it was downloaded, either right-click it
+and choose Open, or allow it under System Settings > Privacy & Security. The
+fallback that always works is one line in Terminal:
+`bash ~/Downloads/brief-digest/Instalar.command` (adjust the folder).
+
+What the installer does, in order:
+
+1. Copies the program to `~/.brief-digest`, because a background program cannot run
+   from Downloads, Desktop or Documents. The unzipped folder can then be deleted.
+2. Installs uv (pinned version) if missing, and the Python packages from the lock
+   file.
+3. Sets `disable_ollama_cloud` in `~/.ollama/server.json`, keeping other settings.
+4. If no Ollama server is running: downloads the Ollama app if missing and runs
+   its bundled server as the agent `local.brief-digest.ollama`, on loopback with
+   `OLLAMA_NO_CLOUD=1`. The desktop app itself is not opened: it stops at a first-run
+   password prompt and updates itself. If an Ollama server is already running, it is
+   kept; when the cloud setting had to be changed, it is stopped and replaced by
+   this agent so the setting takes effect.
+5. Downloads the Portuguese OCR data (pinned, checksummed) and the model.
+6. Runs `scripts/install.py`: creates `~/BriefDigest` (owner-only) with
+   `config.toml` and `LEIA-ME.txt`, excludes it from Time Machine, and registers the
+   agent `local.brief-digest.watcher`.
+7. Copies `Trocar modelo.command` and `Diagnostico.command` into `~/BriefDigest`.
+8. Drops a synthetic filing into `Entrada/` and waits for its summary. The result
+   stays in `Resumos/` as an example until retention removes it.
+
+Running the installer again is safe and is also how to update: unzip the new
+version and double-click `Instalar.command`. Settings and documents are kept.
+
+The Ollama download is the current release, not a pinned one, and is not
+checksummed by this project. The developer route, without any of the downloads, is
+still `uv run --locked --no-dev python scripts/install.py`.
+
+## Switching models
+
+The end user double-clicks `Trocar modelo.command` in `~/BriefDigest` and types a
+number. The list shows the two evaluated models (`gemma4:12b`, `qwen3.5:9b`) and any
+other model installed locally; cloud models are never listed or accepted. A model
+that is not installed is downloaded first. The tool then rewrites the `model` line
+of `config.toml` and restarts the watcher. Documents already summarized are not
+redone; to compare models on one document, copy its `original.pdf` back into
+`Entrada/`.
+
+By hand: edit `model` in `~/BriefDigest/config.toml`, or run
+`uv run --locked python -m scripts.set_model --model NAME` in `~/.brief-digest`.
+Models beyond the two evaluated ones have not been tested, and models much larger
+than about 14B parameters do not fit the target machine's memory.
+
+## Testing with real documents
+
+The end user starts with real filings straight away, so the developer never sees
+the documents. When something goes wrong, the end user double-clicks
+`Diagnostico.command` and sends the resulting `diagnostico.txt`. It holds program
+state, counts, failure types and the app log; no document text, no file or folder
+names, and the home folder path is masked. Nothing else from a real filing (PDF,
+summary, screenshot) should be sent to anyone or pasted into an AI assistant.
 
 ## Check the install
 
-Run each of these once after installing.
+The installer's own self-test covers the first five rows. The last two are worth
+doing once by hand on the real Mac.
 
 | Check | How | Expected |
 |---|---|---|
