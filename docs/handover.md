@@ -57,8 +57,10 @@ What the installer does, in order:
 Running the installer again is safe and is also how to update: unzip the new
 version and double-click `Instalar.command`. Settings and documents are kept.
 
-The Ollama download is the current release, not a pinned one, and is not
-checksummed by this project. The developer route, without any of the downloads, is
+The Ollama download is the current release, not a pinned one, so it has no
+checksum here; instead the installer refuses an app that is not signed with
+Ollama's Apple Developer ID. The uv install script is fetched over HTTPS at a
+pinned version and is not checksummed. The developer route, without any of the downloads, is
 still `uv run --locked --no-dev python scripts/install.py`.
 
 ## Switching models
@@ -147,6 +149,17 @@ document's folder back into `Entrada/`.
 - A document still waiting (Ollama down for days) is not deleted by retention, which
   counts from the end of processing. The watcher's startup log line reports
   `untracked_folders`: folders in `Resumos/` it does not know and will never delete.
+- `full.md` and `summary.md` are written so that a Markdown viewer loads nothing
+  from the internet: HTML, images and link targets from the PDF or the model are
+  shown as plain text. Other files in a document folder are not Markdown.
+- The model server is trusted because it answers on loopback, not because it proves
+  what it is. Another account on the same Mac that takes port 11434 before Ollama
+  starts would receive document text. Use a Mac that only the legal professional
+  logs in to.
+- An oversized or malformed PDF can make one attempt slow or crash the watcher; it
+  is given up after three attempts, but there is no time limit per document.
+- The installer runs whatever is in the downloaded folder. Get it only from the
+  project's own repository.
 - The Time Machine exclusion does not cover other backup or sync tools. Do not put
   the data folder inside a synced folder (iCloud Drive, Dropbox and the like).
 
@@ -154,6 +167,7 @@ document's folder back into `Entrada/`.
 
 - Review the full git history by hand, commit by commit, for names, paths, courts,
   case numbers and screenshots. The CI secrets scan does not replace this.
-- Add the AGPL-3.0 `LICENSE` file.
+- Turn on two-factor authentication for the account and branch protection for
+  `main`: the installer trusts whatever that branch holds.
 - Confirm no issue, pull request, or Actions log in the repository holds anything
   identifying.

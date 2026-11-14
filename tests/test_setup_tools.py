@@ -182,6 +182,22 @@ def test_launchers_exist_and_only_hand_over_to_the_python_tools() -> None:
         assert f"uv run --locked python -m {module}" in launcher
 
 
+def test_installer_refuses_to_mirror_a_folder_that_is_not_the_program() -> None:
+    installer = (REPO_ROOT / "Instalar.command").read_text(encoding="utf-8")
+    assert installer.index("[ ! -f pyproject.toml ]") < installer.index("rsync ")
+
+
+def test_downloaded_ollama_must_carry_the_ollama_developer_id(tmp_path: Path) -> None:
+    command = setup_mac.signature_check(tmp_path / "Ollama.app")
+    assert command[:4] == ("/usr/bin/codesign", "--verify", "--deep", "--strict")
+    assert command[-1] == str(tmp_path / "Ollama.app")
+    assert "anchor apple generic" in command[4]
+    assert f'subject.OU] = "{setup_mac.OLLAMA_TEAM_ID}"' in command[4]
+    source = (REPO_ROOT / "scripts" / "setup_mac.py").read_text(encoding="utf-8")
+    body = source[source.index("def install_ollama_app") :]
+    assert body.index("signature_check(") < body.index("/usr/bin/ditto")  # checked, then copied
+
+
 def test_ollama_agent_serves_on_loopback_with_cloud_off_and_no_log_files(tmp_path: Path) -> None:
     plist = install.ollama_plist(tmp_path / "ollama")
     assert plist["ProgramArguments"] == [str(tmp_path / "ollama"), "serve"]

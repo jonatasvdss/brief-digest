@@ -31,6 +31,7 @@ from brief_digest.ollama import check_local_model_name
 from brief_digest.summarize import BANNER, SUMMARY_MD
 
 OLLAMA_DMG = "https://ollama.com/download/Ollama.dmg"
+OLLAMA_TEAM_ID = "3MU9H2V9Y9"  # Apple Developer ID team that signs Ollama.app
 OLLAMA_HOST, OLLAMA_PORT = "127.0.0.1", 11434
 EXAMPLE_PDF = "EXEMPLO - peça fictícia.pdf"
 EXAMPLE_DOC = "appeal_signed_scan"  # has scanned pages, so the self-test covers OCR
@@ -147,6 +148,19 @@ def ollama_app(home: Path) -> Path | None:
     return None
 
 
+def signature_check(app: Path) -> tuple[str, ...]:
+    """Command that succeeds only for an intact app signed with Ollama's Apple
+    Developer ID. The download is the current release, so it cannot be pinned by
+    checksum; nothing fetched here passes through Gatekeeper either."""
+    requirement = (
+        "anchor apple generic"
+        " and certificate 1[field.1.2.840.113635.100.6.2.6] exists"
+        " and certificate leaf[field.1.2.840.113635.100.6.1.13] exists"
+        f' and certificate leaf[subject.OU] = "{OLLAMA_TEAM_ID}"'
+    )
+    return ("/usr/bin/codesign", "--verify", "--deep", "--strict", f"-R={requirement}", str(app))
+
+
 def install_ollama_app(home: Path) -> bool:
     with tempfile.TemporaryDirectory() as tmp:
         dmg, mount = Path(tmp) / "Ollama.dmg", Path(tmp) / "mount"
@@ -163,6 +177,9 @@ def install_ollama_app(home: Path) -> bool:
         ):
             return False
         try:
+            if run(*signature_check(mount / "Ollama.app")):
+                say("    O arquivo baixado não tem a assinatura do Ollama; não foi instalado.")
+                return False
             for folder in (Path("/Applications"), home / "Applications"):
                 folder.mkdir(exist_ok=True)
                 if (

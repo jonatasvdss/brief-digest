@@ -36,6 +36,7 @@ jobs:
       - name: Ollama state (for debugging a failed install)
         if: always()
         run: |
+          codesign -dv --verbose=2 /Applications/Ollama.app 2>&1 | grep -E "TeamIdentifier|Authority" || true
           pgrep -fl -i ollama || true
           launchctl print "gui/$(id -u)/local.brief-digest.ollama" | grep -E "state = |program = " || true
           lsof -nP -iTCP:11434 -sTCP:LISTEN || true

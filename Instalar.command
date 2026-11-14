@@ -14,6 +14,11 @@ finish() {
 }
 
 cd "$(dirname "$0")" || finish 1
+# The copy below mirrors this folder, so it must be the program folder and nothing else.
+if [ ! -f pyproject.toml ] || [ ! -f scripts/setup_mac.py ] || [ ! -f uv.lock ]; then
+  echo "ERRO: este arquivo precisa ficar dentro da pasta do programa (brief-digest)."
+  finish 1
+fi
 if [ "$(pwd -P)" != "$APP" ]; then
   echo "Copiando o programa para $APP ..."
   mkdir -p "$APP" || finish 1
