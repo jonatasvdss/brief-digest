@@ -83,3 +83,7 @@ quality):
 ```sh
 uv run python scripts/eval_models.py gemma4:12b qwen3.5:9b
 ```
+
+## License
+
+AGPL-3.0; see [LICENSE](LICENSE).
