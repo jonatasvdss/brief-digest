@@ -30,6 +30,7 @@ from brief_digest.summarize import SummarizerError
 
 REPO = Path(__file__).resolve().parent.parent
 LABEL = "local.brief-digest.watcher"
+OLLAMA_LABEL = "local.brief-digest.ollama"
 CONFIG_NAME = "config.toml"
 LAUNCHCTL = "/bin/launchctl"
 TMUTIL = "/usr/bin/tmutil"
@@ -113,8 +114,22 @@ def agent_plist(python: Path, config_path: Path) -> dict[str, object]:
     }
 
 
-def _plist_path(home: Path) -> Path:
-    return home / "Library" / "LaunchAgents" / f"{LABEL}.plist"
+def ollama_plist(binary: Path) -> dict[str, object]:
+    """Runs `ollama serve` itself rather than the Ollama desktop app: no first-run
+    password prompt, no self-updater, and cloud features off through the environment
+    as well as the settings file. Loopback only. No log paths (default: discarded)."""
+    return {
+        "Label": OLLAMA_LABEL,
+        "ProgramArguments": [str(binary), "serve"],
+        "EnvironmentVariables": {"OLLAMA_NO_CLOUD": "1", "OLLAMA_HOST": "127.0.0.1:11434"},
+        "RunAtLoad": True,
+        "KeepAlive": True,
+        "ThrottleInterval": 30,
+    }
+
+
+def _plist_path(home: Path, label: str = LABEL) -> Path:
+    return home / "Library" / "LaunchAgents" / f"{label}.plist"
 
 
 def _run(*command: str) -> int:
@@ -139,8 +154,12 @@ def exclude_from_backups(data_dir: Path) -> bool:
     return _run(TMUTIL, "addexclusion", str(data_dir)) == 0
 
 
-def stop_agent() -> None:
-    target = f"gui/{os.getuid()}/{LABEL}"
+def agent_loaded(label: str = LABEL) -> bool:
+    return _launchctl("print", f"gui/{os.getuid()}/{label}") == 0
+
+
+def stop_agent(label: str = LABEL) -> None:
+    target = f"gui/{os.getuid()}/{label}"
     _launchctl("bootout", target)
     for _ in range(20):  # bootout returns before the service is gone
         if _launchctl("print", target) != 0:
@@ -148,12 +167,18 @@ def stop_agent() -> None:
         time.sleep(0.5)
 
 
-def start_agent(home: Path, config_path: Path) -> bool:
-    path = _plist_path(home)
+def load_agent(home: Path, plist: dict[str, object]) -> bool:
+    """Write the agent file and (re)start the agent under the logged-in user."""
+    label = str(plist["Label"])
+    path = _plist_path(home, label)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(plistlib.dumps(agent_plist(Path(sys.executable), config_path)))
-    stop_agent()
+    path.write_bytes(plistlib.dumps(plist))
+    stop_agent(label)
     return _launchctl("bootstrap", f"gui/{os.getuid()}", str(path)) == 0
+
+
+def start_agent(home: Path, config_path: Path) -> bool:
+    return load_agent(home, agent_plist(Path(sys.executable), config_path))
 
 
 def main(argv: list[str]) -> int:
@@ -169,8 +194,9 @@ def main(argv: list[str]) -> int:
 
     if args.uninstall:
         if macos:
-            stop_agent()
-            _plist_path(home).unlink(missing_ok=True)
+            for label in (LABEL, OLLAMA_LABEL):
+                stop_agent(label)
+                _plist_path(home, label).unlink(missing_ok=True)
         print(f"Watcher removed. Documents and settings were left in {data_dir}")
         return 0
 

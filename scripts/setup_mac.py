@@ -176,17 +176,27 @@ def install_ollama_app(home: Path) -> bool:
 
 
 def start_ollama(home: Path) -> bool:
+    """Run the Ollama server as a launchd agent of our own (see install.ollama_plist),
+    using the program inside the Ollama app. Starts at login from then on."""
     app = ollama_app(home)
     if app is None:
         return False
-    run("/usr/bin/open", "-g", "-a", str(app))
-    return wait_for(True, 120)
+    binary = app / "Contents" / "Resources" / "ollama"
+    return (
+        binary.is_file()
+        and install.load_agent(home, install.ollama_plist(binary))
+        and wait_for(True, 120)
+    )
 
 
-def stop_ollama() -> bool:
-    run("/usr/bin/killall", "Ollama")
-    run("/usr/bin/killall", "ollama")
-    return wait_for(False, 30)
+def restart_ollama(home: Path) -> bool:
+    """Restart a running server so it reads the changed settings file."""
+    if install.agent_loaded(install.OLLAMA_LABEL):
+        install.stop_agent(install.OLLAMA_LABEL)
+    else:  # started by the Ollama desktop app
+        run("/usr/bin/killall", "Ollama")
+        run("/usr/bin/killall", "ollama")
+    return wait_for(False, 30) and start_ollama(home)
 
 
 def ensure_ollama(home: Path) -> str | None:
@@ -196,9 +206,10 @@ def ensure_ollama(home: Path) -> str | None:
         say("    Baixando o Ollama (cerca de 230 MB)...")
         if not install_ollama_app(home):
             return "não foi possível instalar o Ollama"
-    if changed and server_up() and not stop_ollama():
-        return "não foi possível reiniciar o Ollama"
-    if not server_up() and not start_ollama(home):
+    if changed and server_up():
+        if not restart_ollama(home):
+            return "não foi possível reiniciar o Ollama"
+    elif not server_up() and not start_ollama(home):
         return "o Ollama não iniciou"
     return None
 

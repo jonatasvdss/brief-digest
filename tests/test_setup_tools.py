@@ -180,3 +180,17 @@ def test_launchers_exist_and_only_hand_over_to_the_python_tools() -> None:
         launcher = (REPO_ROOT / "mac" / name).read_text(encoding="utf-8")
         assert launcher.startswith("#!/bin/bash\n")
         assert f"uv run --locked python -m {module}" in launcher
+
+
+def test_ollama_agent_serves_on_loopback_with_cloud_off_and_no_log_files(tmp_path: Path) -> None:
+    plist = install.ollama_plist(tmp_path / "ollama")
+    assert plist["ProgramArguments"] == [str(tmp_path / "ollama"), "serve"]
+    assert plist["EnvironmentVariables"] == {
+        "OLLAMA_NO_CLOUD": "1",
+        "OLLAMA_HOST": "127.0.0.1:11434",
+    }
+    assert plist["RunAtLoad"] is True
+    assert plist["KeepAlive"] is True
+    assert "StandardErrorPath" not in plist
+    assert "StandardOutPath" not in plist
+    assert plist["Label"] != install.LABEL

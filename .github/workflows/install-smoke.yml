@@ -38,6 +38,7 @@ jobs:
         run: |
           ls -la /Applications/Ollama.app/Contents/MacOS /Applications/Ollama.app/Contents/Resources || true
           pgrep -fl -i ollama || true
+          launchctl print "gui/$(id -u)/local.brief-digest.ollama" | grep -E "state = |program = " || true
           lsof -nP -iTCP:11434 -sTCP:LISTEN || true
           curl -s --max-time 5 http://127.0.0.1:11434/api/version || true
           ls -la "$HOME/.ollama" "$HOME/.ollama/logs" || true
