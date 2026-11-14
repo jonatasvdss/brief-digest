@@ -30,15 +30,18 @@ jobs:
           persist-credentials: false
 
       - name: Install with the double-click installer
-        run: bash Instalar.command --yes --model "$MODEL"
+        run: |
+          bash Instalar.command --yes --model "$MODEL"
 
       - name: Program was copied out of the checkout
         if: always()
-        run: test -f "$HOME/.brief-digest/pyproject.toml" && test -d "$HOME/.brief-digest/.tessdata"
+        run: |
+          test -f "$HOME/.brief-digest/pyproject.toml" && test -d "$HOME/.brief-digest/.tessdata"
 
       - name: Agent is running
         if: always()
-        run: launchctl print "gui/$(id -u)/local.brief-digest.watcher" | grep -E "state = running"
+        run: |
+          launchctl print "gui/$(id -u)/local.brief-digest.watcher" | grep -E "state = running"
 
       - name: Data folder is private and excluded from Time Machine
         if: always()
@@ -48,7 +51,8 @@ jobs:
 
       - name: Ollama cloud features are off
         if: always()
-        run: grep -F '"disable_ollama_cloud": true' "$HOME/.ollama/server.json"
+        run: |
+          grep -F '"disable_ollama_cloud": true' "$HOME/.ollama/server.json"
 
       - name: Example summary was produced
         if: always()
@@ -74,7 +78,8 @@ jobs:
 
       - name: Diagnostic report
         if: always()
-        run: bash "$HOME/BriefDigest/Diagnostico.command"
+        run: |
+          bash "$HOME/BriefDigest/Diagnostico.command"
 
       - name: Uninstall removes the agent and keeps the data
         if: always()
