@@ -42,6 +42,11 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "T20", "PTH", "SIM", "RUF", "TID"]
 "scripts/eval_models.py" = ["T20"]
 # Developer-run setup: console output, and launchctl called by absolute path.
 "scripts/install.py" = ["T20"]
+# End-user setup tools: console output; setup_mac downloads Ollama and asks the local
+# server to pull a model, as an explicit, confirmed setup action (hard rule 5).
+"scripts/setup_mac.py" = ["T20", "TID251"]
+"scripts/set_model.py" = ["T20"]
+"scripts/diagnose.py" = ["T20"]
 # The one runtime module allowed network access: loopback Ollama only (hard rule 5).
 "src/brief_digest/ollama.py" = ["TID251"]
 

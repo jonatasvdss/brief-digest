@@ -17,6 +17,7 @@ import argparse
 import json
 import os
 import plistlib
+import re
 import shutil
 import subprocess
 import sys
@@ -48,6 +49,21 @@ def config_text(data_dir: Path, model: str) -> str:
         f"tessdata = {quoted(REPO / '.tessdata')}\n"
         f"model = {quoted(model)}\n"
     )
+
+
+def default_data_dir(home: Path) -> Path:
+    return home / "BriefDigest"
+
+
+_MODEL_LINE = re.compile(r"^model[ \t]*=.*$", re.MULTILINE)
+
+
+def with_model(config: str, model: str) -> str:
+    """The config text with its `model` line replaced (or added); the rest untouched."""
+    line = f"model = {json.dumps(model, ensure_ascii=False)}"
+    if _MODEL_LINE.search(config):
+        return _MODEL_LINE.sub(lambda _: line, config, count=1)
+    return config.rstrip("\n") + "\n" + line + "\n"
 
 
 def cloud_disabled(home: Path) -> bool:
@@ -144,7 +160,7 @@ def main(argv: list[str]) -> int:
     home = Path.home()
     macos = sys.platform == "darwin"
     parser = argparse.ArgumentParser(description="Install or uninstall brief-digest.")
-    parser.add_argument("--data-dir", type=Path, default=home / "BriefDigest")
+    parser.add_argument("--data-dir", type=Path, default=default_data_dir(home))
     parser.add_argument("--model", default=AppConfig.model)
     parser.add_argument("--uninstall", action="store_true")
     args = parser.parse_args(argv)

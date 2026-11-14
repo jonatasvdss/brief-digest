@@ -1,0 +1,85 @@
+name: install-smoke
+
+# Runs the real macOS installer on a clean runner, with synthetic documents only:
+# installs uv and Ollama, pulls a small model, registers the launchd agent, and
+# waits for the watcher to summarize a synthetic filing. Manual trigger only: it
+# downloads Ollama and a model on every run.
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Small model for the runner (the default model needs more memory)
+        default: "qwen3.5:2b"
+      second_model:
+        description: Model to switch to with the model switcher
+        default: "gemma4:e2b"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    env:
+      MODEL: ${{ inputs.model }}
+      SECOND_MODEL: ${{ inputs.second_model }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install with the double-click installer
+        run: bash Instalar.command --yes --model "$MODEL"
+
+      - name: Program was copied out of the checkout
+        if: always()
+        run: test -f "$HOME/.brief-digest/pyproject.toml" && test -d "$HOME/.brief-digest/.tessdata"
+
+      - name: Agent is running
+        if: always()
+        run: launchctl print "gui/$(id -u)/local.brief-digest.watcher" | grep -E "state = running"
+
+      - name: Data folder is private and excluded from Time Machine
+        if: always()
+        run: |
+          ls -ld "$HOME/BriefDigest" | grep -E "^drwx------"
+          tmutil isexcluded "$HOME/BriefDigest" | grep -F "[Excluded]"
+
+      - name: Ollama cloud features are off
+        if: always()
+        run: grep -F '"disable_ollama_cloud": true' "$HOME/.ollama/server.json"
+
+      - name: Example summary was produced
+        if: always()
+        run: |
+          ls "$HOME/BriefDigest"
+          ls "$HOME/BriefDigest/Resumos"
+          cat "$HOME/BriefDigest/Resumos/"*/summary.md
+
+      - name: Switch model and summarize again
+        if: always()
+        run: |
+          bash "$HOME/BriefDigest/Trocar modelo.command" --model "$SECOND_MODEL"
+          grep -F "model = \"$SECOND_MODEL\"" "$HOME/BriefDigest/config.toml"
+          launchctl print "gui/$(id -u)/local.brief-digest.watcher" | grep -E "state = running"
+          cd "$HOME/.brief-digest"
+          uv run --locked python -m tests.fixtures.synth /tmp/synthetic
+          cp /tmp/synthetic/appeal_native.pdf "$HOME/BriefDigest/Entrada/"
+          for _ in $(seq 1 120); do
+            test -f "$HOME/BriefDigest/Resumos/appeal_native/summary.md" && break
+            sleep 5
+          done
+          cat "$HOME/BriefDigest/Resumos/appeal_native/summary.md"
+
+      - name: Diagnostic report
+        if: always()
+        run: bash "$HOME/BriefDigest/Diagnostico.command"
+
+      - name: Uninstall removes the agent and keeps the data
+        if: always()
+        run: |
+          cd "$HOME/.brief-digest"
+          uv run --locked python scripts/install.py --uninstall
+          ! launchctl print "gui/$(id -u)/local.brief-digest.watcher" >/dev/null 2>&1
+          test -d "$HOME/BriefDigest/Resumos"
