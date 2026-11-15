@@ -16,6 +16,7 @@ The watcher keeps one data folder (default `~/BriefDigest`):
 |---|---|
 | `Entrada/` | Drop PDFs here. |
 | `Resumos/<file name>/` | One folder per PDF: `original.pdf`, `full.md` (text with page markers), `summary.md` (draft summary), and small status files. |
+| `instrucoes.txt` | Optional guidance for the summaries, in the user's own words. Read for every document. |
 | `config.toml` | Settings. Restart the watcher after editing. |
 | `.state/` | Job database and logs. Logs hold counts, durations and error types only. |
 

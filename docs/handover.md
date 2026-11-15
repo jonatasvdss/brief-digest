@@ -78,6 +78,23 @@ By hand: edit `model` in `~/BriefDigest/config.toml`, or run
 Models beyond the two evaluated ones have not been tested, and models much larger
 than about 14B parameters do not fit the target machine's memory.
 
+## Adjusting the summaries
+
+The end user edits `instrucoes.txt` in `~/BriefDigest`: plain lines of guidance on
+style and level of detail, in Portuguese. Lines starting with `#` are ignored. The
+file is read for every document, so no restart is needed, and the installer never
+overwrites it. Its lines are appended to the system prompt under a heading that
+gives the fixed rules precedence; the fixed rules themselves (no tools, document
+text is untrusted, only what the filing says, page references, JSON output) stay in
+`summarize.py` and cannot be edited there. Precedence is an instruction to the
+model, not a guarantee: guidance asking for content the filing does not hold can
+still produce it, and only cited legal references are caught by the verifier.
+Deleting the file, or leaving only comment lines, restores the default. The
+diagnostic report says whether guidance is in use, never what it says.
+
+Sections are a different thing: they come from the template (see "Summary format"
+below).
+
 ## Testing with real documents
 
 The end user starts with real filings straight away, so the developer never sees
@@ -131,6 +148,7 @@ would also be removed by retention).
 | `model_not_installed`, `model_not_local` | The configured model is missing, or is a cloud model | `ollama pull <model>`; never configure a cloud model |
 | `ollama_http_NNN`, `ollama_bad_response` | Ollama answered with an error | Retried 3 times, 10 minutes apart; check Ollama if it persists |
 | `invalid_json`, `schema_violation`, `unknown_section`, `missing_page_reference`, `page_out_of_range`, `missing_required_section` | The model's answer broke the output rules and was discarded | Final for that document; drop the PDF again only after changing model or template |
+| `instructions_too_long`, `instructions_unreadable` | `instrucoes.txt` is over 2000 characters, or is not plain UTF-8 text (saved as rich text, for example) | Final for that document; fix the file and drop the PDF again |
 | `tool_call`, `tool_use_claim` | The model claimed to run a tool, possibly prompted by text in the PDF | Final; the answer was discarded. Worth a look at the PDF by its owner |
 | "Extração incompleta" | OCR failed on at least one page | Final; if it happens on every scan, the OCR data is missing (run the installer to check) |
 | `SomeError@file.py:123` | The document could not be handled (damaged or password-protected PDF, for example) | Final; the location points at the code line for a bug report |

@@ -72,6 +72,10 @@ Pipeline, each stage idempotent and communicating through files plus a SQLite st
   explicit setup step. The tessdata location is always configured explicitly (config
   or `TESSDATA_PREFIX`); never use PyMuPDF's auto-discovery, which runs shell commands.
 - **Summarization:** local LLM via Ollama on `localhost`. Map-reduce over chunks.
+  The system prompt's rules are fixed in `summarize.py`. The end user can add
+  guidance on style in `instrucoes.txt` in the data folder (optional, read per
+  document, at most 2000 characters, `#` lines ignored); it is appended after the
+  rules, under a heading that gives the rules precedence, and never replaces them.
   Output sections are defined by a template, never hardcoded in Python (see
   "Summary template" below). Default model: `gemma4:12b` (Apache-2.0, ~8 GB Q4);
   comparison candidate: `qwen3.5:9b`. Neither has been benchmarked on Portuguese legal

@@ -1,0 +1,28 @@
+# INSTRUÇÕES PARA OS RESUMOS
+#
+# Escreva no fim deste arquivo, em português comum, como você prefere que os
+# resumos sejam feitos. Uma orientação por linha. Exemplos:
+#
+#     Escreva itens curtos, com no máximo duas frases.
+#     No mérito, separe cada argumento em um item próprio.
+#     Use linguagem formal.
+#
+# Como funciona:
+# - Linhas que começam com # (como estas) são ignoradas pelo programa.
+# - A mudança vale para os próximos PDFs. Não é preciso reiniciar nada.
+# - Para refazer um resumo com as novas instruções, copie o arquivo original.pdf
+#   da pasta da peça de volta para a pasta "Entrada".
+# - Limite de 2000 caracteres. Acima disso, o resumo não é gerado e aparece o
+#   motivo "instructions_too_long".
+# - Salve como texto simples, com este mesmo nome.
+# - Para voltar ao padrão, apague as linhas que você escreveu.
+#
+# O que NÃO muda por aqui:
+# - As regras fixas do programa: o resumo usa somente o que está escrito na peça
+#   e indica a página de cada informação. Se uma instrução contrariar essas
+#   regras, valem as regras.
+# - As seções do resumo (Identificação, Mérito, Pedidos etc.).
+#
+# O resumo continua sendo um rascunho. Confira sempre com a peça original.
+#
+# Escreva suas instruções abaixo desta linha:

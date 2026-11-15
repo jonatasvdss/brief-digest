@@ -38,6 +38,13 @@ para outro lugar antes. Não guarde anotações dentro da pasta "Resumos".
 
 Esta pasta não entra no backup do Time Machine.
 
+Ajustar o estilo dos resumos
+----------------------------
+Abra o arquivo "instrucoes.txt", nesta pasta, e escreva no fim dele como prefere que
+os resumos sejam feitos (por exemplo: "Escreva itens curtos"). O próprio arquivo
+explica como. A mudança vale para os próximos PDFs. As regras fixas do programa não
+mudam: o resumo usa somente o que está na peça e indica a página de cada informação.
+
 Trocar o modelo
 ---------------
 O resumo é escrito por um modelo de linguagem instalado neste computador. Para usar

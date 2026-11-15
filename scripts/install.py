@@ -24,7 +24,7 @@ import sys
 import time
 from pathlib import Path
 
-from brief_digest.config import AppConfig, ConfigError, load_config
+from brief_digest.config import INSTRUCTIONS_NAME, AppConfig, ConfigError, load_config
 from brief_digest.ollama import OllamaSummarizer
 from brief_digest.summarize import SummarizerError
 
@@ -215,6 +215,8 @@ def main(argv: list[str]) -> int:
         folder.mkdir(parents=True, exist_ok=True)
     make_private(config.data_dir)
     shutil.copyfile(REPO / "docs" / USER_GUIDE, config.data_dir / USER_GUIDE)
+    if not config.instructions.exists():  # the user's own file: never overwritten
+        shutil.copyfile(REPO / "docs" / INSTRUCTIONS_NAME, config.instructions)
 
     problems = preflight(config, home, macos)
     if problems:

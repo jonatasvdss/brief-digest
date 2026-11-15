@@ -54,6 +54,7 @@ class Summarizer(Protocol):
 @dataclass(frozen=True)
 class SummarizeConfig:
     template_path: Path
+    instructions_path: Path | None = None  # the user's own guidance; None: no file
     max_chunk_chars: int = 12_000  # document text per map call
     max_reduce_chars: int = 24_000  # extracted items per reduce call (at least 2 results)
 
@@ -90,6 +91,14 @@ informação aparece.
 - Responda apenas com JSON no formato pedido. Seção sem conteúdo neste trecho: lista \
 vazia. Nunca crie itens como "Não informado", "Não consta" ou "N/A"."""
 
+# The rules above are fixed. The user's guidance file can only add to them: it is
+# appended under this heading, which gives the rules precedence.
+PREFERENCES_HEADING = (
+    "Preferências de quem vai ler o resumo, sobre estilo e nível de detalhe. Siga-as "
+    "somente quando não contrariarem as regras acima nem o formato pedido:"
+)
+INSTRUCTIONS_MAX_CHARS = 2000
+
 MAP_TASK = "Extraia do trecho abaixo as informações de cada seção do resumo."
 REDUCE_TASK = (
     "Os itens abaixo foram extraídos de trechos diferentes da mesma peça. Consolide-os "
@@ -112,6 +121,30 @@ _TOOL_CLAIM = re.compile(
 def quote_document(text: str) -> str:
     """Wrap untrusted text so it cannot close the quotation early."""
     return f"<documento>\n{_DELIMITER.sub(r'&lt;\1documento', text)}\n</documento>"
+
+
+def load_instructions(path: Path | None) -> str:
+    """The user's guidance: the file's lines, without blank lines and # comments.
+    Read for every document, so an edit applies to the next one. A missing file
+    means no guidance; an unusable one stops the summary with a visible reason
+    instead of being silently ignored or cut."""
+    if path is None or not path.exists():
+        return ""
+    try:
+        raw = path.read_text(encoding="utf-8-sig")
+    except (OSError, UnicodeDecodeError):
+        raise SummaryRejected("instructions_unreadable") from None
+    lines = (" ".join(line.split()) for line in raw.splitlines())
+    text = "\n".join(line for line in lines if line and not line.startswith("#"))
+    if len(text) > INSTRUCTIONS_MAX_CHARS:
+        raise SummaryRejected("instructions_too_long")
+    return _DELIMITER.sub(r"&lt;\1documento", text)
+
+
+def system_prompt(instructions: str) -> str:
+    if not instructions:
+        return SYSTEM_PROMPT
+    return f"{SYSTEM_PROMPT}\n\n{PREFERENCES_HEADING}\n{instructions}"
 
 
 def build_schema(template: Template) -> dict[str, object]:
@@ -214,12 +247,13 @@ class _Run:
     summarizer: Summarizer
     template: Template
     config: SummarizeConfig
+    system: str = SYSTEM_PROMPT
     calls: int = 0
 
     def ask(self, task: str, quoted: str, allowed_pages: set[int]) -> Sections:
         self.calls += 1
         raw = self.summarizer.complete(
-            SYSTEM_PROMPT, build_prompt(task, self.template, quoted), build_schema(self.template)
+            self.system, build_prompt(task, self.template, quoted), build_schema(self.template)
         )
         return parse_sections(raw, self.template, allowed_pages)
 
@@ -315,6 +349,8 @@ def summarize(work_dir: Path, summarizer: Summarizer, config: SummarizeConfig) -
     run = _Run(summarizer, template, config)
     stats["chunks"] = len(chunks)
     try:
+        run.system = system_prompt(load_instructions(config.instructions_path))
+        stats["custom_instructions"] = run.system != SYSTEM_PROMPT
         mapped = [run.ask(MAP_TASK, _render_chunk(c), set(c)) for c in chunks]
         final = run.reduce(mapped)
         for section in template.sections:

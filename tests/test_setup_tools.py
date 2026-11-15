@@ -8,8 +8,8 @@ import pytest
 from scripts import diagnose, install, set_model, setup_mac
 
 from brief_digest.cli import LOG_FILE
-from brief_digest.config import load_config
-from brief_digest.summarize import SUMMARY_MD
+from brief_digest.config import INSTRUCTIONS_NAME, load_config
+from brief_digest.summarize import INSTRUCTIONS_MAX_CHARS, SUMMARY_MD, load_instructions
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -158,10 +158,36 @@ def test_report_has_counts_but_no_names_paths_or_document_text(
     assert "document folders without summary: 1" in text
     assert "1 x done None" in text
     assert "config model: gemma4:12b" in text
+    assert "custom instructions: no" in text
+    config.instructions.write_text("Destaque o texto sigiloso.", encoding="utf-8")
+    again = diagnose.report(data_dir, home)
+    assert "custom instructions: yes" in again
+    assert "sigilos" not in again  # in use, but never what it says
     assert "ollama: not reachable" in text
     for secret in ("sigilos", "nome-do-usuario", "texto"):
         assert secret not in text
     assert "t INFO opened ~" in text  # the home path, were it ever logged, is masked
+
+
+# --- the user's guidance file -------------------------------------------------------
+
+
+def test_shipped_guidance_file_explains_itself_and_changes_nothing() -> None:
+    shipped = REPO_ROOT / "docs" / INSTRUCTIONS_NAME
+    assert load_instructions(shipped) == ""  # comments only: the default prompt
+    text = shipped.read_text(encoding="utf-8")
+    assert str(INSTRUCTIONS_MAX_CHARS) in text
+    assert "instructions_too_long" in text
+
+
+def test_installer_adds_the_guidance_file_and_never_overwrites_it(tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    install.main(["--data-dir", str(data_dir)])  # result depends on Ollama; files do not
+    path = data_dir / INSTRUCTIONS_NAME
+    assert path.read_bytes() == (REPO_ROOT / "docs" / INSTRUCTIONS_NAME).read_bytes()
+    path.write_text("Escreva itens curtos.", encoding="utf-8")
+    install.main(["--data-dir", str(data_dir)])
+    assert path.read_text(encoding="utf-8") == "Escreva itens curtos."
 
 
 # --- launchers ----------------------------------------------------------------------

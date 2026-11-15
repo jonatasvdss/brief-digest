@@ -26,7 +26,7 @@ from scripts.setup_mac import api, local_models
 from brief_digest import __version__
 from brief_digest.cli import LOG_FILE
 from brief_digest.config import ConfigError, load_config
-from brief_digest.summarize import SUMMARY_MD
+from brief_digest.summarize import SUMMARY_MD, SummarizerError, load_instructions
 
 REPORT_NAME = "diagnostico.txt"
 LOG_LINES = 200
@@ -80,6 +80,11 @@ def report(data_dir: Path, home: Path) -> str:
         f"config template found: {config.template.is_file()}",
         f"ocr data found: {(config.tessdata / 'por.traineddata').is_file()}",
     ]
+    try:  # whether guidance is in use, never what it says
+        custom = "yes" if load_instructions(config.instructions) else "no"
+    except SummarizerError as exc:
+        custom = f"ERROR {exc.failure_type}"
+    lines.append(f"custom instructions: {custom}")
     if sys.platform == "darwin":
         _, out = _output(install.TMUTIL, "isexcluded", str(data_dir))
         lines.append(f"time machine excluded: {'[Excluded]' in out}")

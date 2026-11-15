@@ -114,7 +114,9 @@ def _run_stages(
     try:
         if not (job_dir / EXTRACT_JSON).is_file():  # written last: extraction finished
             extract(job_dir / SOURCE_PDF, job_dir, config.extract_config())
-        result = summarize(job_dir, summarizer, SummarizeConfig(config.template))
+        result = summarize(
+            job_dir, summarizer, SummarizeConfig(config.template, config.instructions)
+        )
         if result.status != "ok":
             return result.status, result.failure_type, result.status == "failed"
         verify(job_dir, config.template)

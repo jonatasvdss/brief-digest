@@ -17,6 +17,7 @@ from brief_digest.ollama import OllamaConfig, check_local_model_name, check_loop
 INBOX_NAME = "Entrada"
 OUTPUT_NAME = "Resumos"
 STATE_NAME = ".state"
+INSTRUCTIONS_NAME = "instrucoes.txt"  # no accent: file names differ in how they store one
 
 
 class ConfigError(Exception):
@@ -48,6 +49,11 @@ class AppConfig:
     @property
     def state_dir(self) -> Path:
         return self.data_dir / STATE_NAME
+
+    @property
+    def instructions(self) -> Path:
+        """The user's own guidance for the summaries (optional file, read per document)."""
+        return self.data_dir / INSTRUCTIONS_NAME
 
     @property
     def db(self) -> Path:
